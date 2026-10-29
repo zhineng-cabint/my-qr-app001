@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>智能寄存柜</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    font-family: system-ui, -apple-system, sans-serif;
+    display: flex; flex-direction: column; align-items: center;
+    padding: 32px 20px; background: #f5f6f8; margin: 0;
+    min-height: 100vh;
+  }
+  h2 { margin: 0 0 8px; font-size: 22px; color: #222; }
+  .sub { color: #888; font-size: 14px; margin-bottom: 24px; }
+  .btns { display: flex; gap: 16px; margin-bottom: 24px; width: 100%; max-width: 340px; }
+  button {
+    flex: 1; font-size: 18px; padding: 14px 0; border: none;
+    border-radius: 10px; cursor: pointer; color: #fff; font-weight: 600;
+  }
+  .btn-store { background: #1677ff; }
+  .btn-take  { background: #52c41a; }
+  button:active { opacity: 0.8; }
+  #qrcode {
+    width: 272px; height: 272px; display: flex; align-items: center;
+    justify-content: center; background: #fff; padding: 8px;
+    border-radius: 14px; box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+  }
+  #tip { color: #888; margin-top: 18px; font-size: 14px; text-align: center; line-height: 1.6; }
+  .warn { color: #d4380d; font-size: 12px; margin-top: 12px; text-align: center; max-width: 320px; }
+</style>
+</head>
+<body>
+  <h2>智能寄存柜</h2>
+  <p class="sub">请将下方二维码对准柜子扫码器</p >
+
+  <div class="btns">
+    <button class="btn-store" onclick="renderQR()">存</button>
+    <button class="btn-take"  onclick="renderQR()">取</button>
+  </div>
+
+  <div id="qrcode"></div>
+  <p id="tip">二维码已生成，请对准柜子扫码口</p >
+  <p class="warn">请勿清除微信缓存或更换手机，否则将无法取件</p >
+
+  <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+  <script>
+    // ===== 1. 获取或生成持久唯一标识（存于 localStorage，永不变）=====
+    function getUserKey() {
+      var KEY = 'cabinet_user_key';
+      var key = localStorage.getItem(KEY);
+      if (!key) {
+        // 生成 16 字节随机十六进制，作为这台手机的身份
+        var arr = new Uint8Array(16);
+        crypto.getRandomValues(arr);   // 微信内置浏览器支持
+        key = Array.from(arr, function (b) {
+          return b.toString(16).padStart(2, '0');
+        }).join('').toUpperCase();
+        localStorage.setItem(KEY, key);
+      }
+      return key;
+    }
+
+    // ===== 2. 渲染二维码（内容 = 唯一标识，存和取完全一致）=====
+    function renderQR() {
+      var content = getUserKey();   // 例如 "9F3A7C2E1B8D4A6F0E5C3B2A1D9F8E7C"
+      var container = document.getElementById('qrcode');
+      container.innerHTML = '';
+      new QRCode(container, {
+        text: content,
+        width: 256,
+        height: 256,
+        correctLevel: QRCode.CorrectLevel.H   // 高容错，屏幕扫描更稳
+      });
+      document.getElementById('tip').textContent = '二维码已生成，请对准柜子扫码口';
+    }
+
+    // ===== 3. 打开页面自动生成 =====
+    renderQR();
+  </script>
+</body>
+</html>
